@@ -644,8 +644,8 @@ getEmployeeIdByName(name) {
       const trip = await sbSelectOneById("business_trips", id);
       if (!trip) throw new Error("対象データが見つかりません");
 
-      // 社員が未登録なら作る
-      const emp = this.ensureEmployeeByName(trip.employee_name);
+      // 社員が未登録なら作る（← ここが重要）
+      const emp = await this.upsertEmployeeByName(trip.employee_name);
 
       document.getElementById("eventId").value = trip.id;
       document.getElementById("eventEmployee").value = emp ? emp.id : "";
@@ -653,21 +653,23 @@ getEmployeeIdByName(name) {
       document.getElementById("eventStartDate").value = (trip.start_date || "").split("T")[0];
       document.getElementById("eventEndDate").value = (trip.end_date || "").split("T")[0];
       document.getElementById("eventHotel").value = trip.hotel || "";
-      document.getElementById("eventHotelCheckIn").value = trip.hotel_check_in ? String(trip.hotel_check_in).split("T")[0] : "";
-      document.getElementById("eventHotelCheckOut").value = trip.hotel_check_out ? String(trip.hotel_check_out).split("T")[0] : "";
+      document.getElementById("eventHotelCheckIn").value =
+        trip.hotel_check_in ? String(trip.hotel_check_in).split("T")[0] : "";
+      document.getElementById("eventHotelCheckOut").value =
+        trip.hotel_check_out ? String(trip.hotel_check_out).split("T")[0] : "";
       document.getElementById("eventHotelType").value = trip.hotel_type || "";
       document.getElementById("eventNotes").value = trip.notes || "";
 
       document.getElementById("eventModalTitle").textContent = "出張編集";
       document.getElementById("deleteEvent").style.display = "inline-block";
 
-      const modal = new bootstrap.Modal(document.getElementById("eventModal"));
-      modal.show();
+      new bootstrap.Modal(document.getElementById("eventModal")).show();
     } catch (e) {
-      console.error("編集データの読み込みに失敗しました:", e);
+      console.error(e);
       this.showAlert("編集データの読み込みに失敗しました", "danger");
     }
   }
+
 
   showEmployeeModal() {
     const modalEl = document.getElementById("employeeModal");
