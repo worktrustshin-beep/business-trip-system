@@ -199,6 +199,100 @@ body {
     background-color: #f8f9fa;
 }
 
+/* =============================
+   スマホ最適化（Googleカレンダーっぽく“見やすい”方向へ）
+   - ボタン/見出しの詰まり解消
+   - 余白と文字サイズを最適化
+   - イベント表示をコンパクト化（場所などは非表示）
+   ============================= */
+
+@media (max-width: 576px) {
+    /* 画面端の余白を少し詰める */
+    .container-fluid.mt-3 {
+        padding-left: 10px;
+        padding-right: 10px;
+    }
+
+    /* ナビバーのボタンを縦並びで押しやすく */
+    .navbar .navbar-nav .btn {
+        width: 100%;
+        text-align: left;
+        margin-right: 0 !important;
+        margin-bottom: 8px;
+    }
+
+    /* カードヘッダー（年月・前後・今日・月/週）を折り返して見やすく */
+    .card-header {
+        flex-direction: column;
+        align-items: stretch !important;
+        gap: 8px;
+    }
+    .card-header > div {
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+    #currentMonth {
+        font-size: 1.0rem;
+        white-space: nowrap;
+    }
+
+    /* 曜日ヘッダーを小さく */
+    .calendar-header-cell {
+        padding: 8px 4px;
+        font-size: 0.75rem;
+    }
+
+    /* セルをコンパクトに（1画面に収まる量を増やす） */
+    .calendar-cell {
+        padding: 4px;
+        min-height: 56px;
+    }
+    .date-number {
+        font-size: 0.8rem;
+        margin-bottom: 2px;
+    }
+
+    /* 期間イベントは“名前＋日付”だけにして読みやすく */
+    .period-event {
+        padding: 3px 6px;
+        border-radius: 8px;
+        font-size: 0.7rem;
+        margin-bottom: 3px;
+    }
+    .period-event .event-location {
+        display: none;
+    }
+    .period-event .event-period {
+        font-size: 0.65rem;
+        margin: 1px 0 0;
+    }
+
+    /* 通常イベントも小さめ */
+    .calendar-event {
+        font-size: 0.7rem;
+        padding: 2px 5px;
+    }
+
+    /* 右カラムは下に回るので、見出しを詰める */
+    .hotel-list {
+        max-height: none;
+    }
+}
+
+@media (max-width: 375px) {
+    /* iPhone SE など更に狭い時の微調整 */
+    .calendar-header-cell {
+        font-size: 0.7rem;
+        padding: 6px 2px;
+    }
+    .calendar-cell {
+        min-height: 52px;
+    }
+    .period-event {
+        font-size: 0.68rem;
+    }
+}
+
 .hotel-item:last-child {
     border-bottom: none;
 }
