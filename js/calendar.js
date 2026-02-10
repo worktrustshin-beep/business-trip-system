@@ -114,6 +114,12 @@ class BusinessTripCalendar {
     this.colors = [
       "#FF6B6B", "#4ECDC4", "#45B7D1", "#96CEB4", "#FFEAA7",
       "#DDA0DD", "#FFB347", "#87CEEB", "#FF9FF3", "#54A0FF",
+
+      "#00B894", "#0984E3", "#6C5CE7", "#E17055", "#D63031",
+      "#E84393", "#2D3436", "#00CEC9", "#74B9FF", "#A29BFE",
+
+      "#55EFC4", "#81ECEC", "#FAB1A0", "#FF7675", "#FD79A8",
+      "#FDCB6E", "#636E72", "#B2BEC3", "#1E3799", "#38ADA9",
     ];
 
     this.init();
