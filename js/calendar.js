@@ -68,17 +68,7 @@ async function sbSelectOneById(table, id) {
   return rows && rows[0] ? rows[0] : null;
 }
 
-async function sbUpsert(table, payload, onConflict) {
-  const qs = onConflict ? `?on_conflict=${encodeURIComponent(onConflict)}` : "";
-  return await sbRequest(`/rest/v1/${table}${qs}`, {
-    method: "POST",
-    headers: { ...sbHeaders(false), Prefer: "resolution=merge-duplicates,return=representation" },
-    body: JSON.stringify(payload),
-  });
-}
-
 async function sbInsert(table, payload) {
-
   return await sbRequest(`/rest/v1/${table}`, {
     method: "POST",
     headers: { ...sbHeaders(true), Prefer: "return=representation" },
@@ -101,7 +91,8 @@ async function sbDeleteById(table, id) {
   });
 }
 
-// 4) 社員（カラー）は Supabase の employees テーブルで共有
+// 4) 社員（カラー）はローカル保存で管理（DBには入れない）
+const EMPLOYEES_LS_KEY = "employees_v1";
 
 // 出張管理カレンダー本体
 class BusinessTripCalendar {
@@ -114,12 +105,6 @@ class BusinessTripCalendar {
     this.colors = [
       "#FF6B6B", "#4ECDC4", "#45B7D1", "#96CEB4", "#FFEAA7",
       "#DDA0DD", "#FFB347", "#87CEEB", "#FF9FF3", "#54A0FF",
-
-      "#00B894", "#0984E3", "#6C5CE7", "#E17055", "#D63031",
-      "#E84393", "#2D3436", "#00CEC9", "#74B9FF", "#A29BFE",
-
-      "#55EFC4", "#81ECEC", "#FAB1A0", "#FF7675", "#FD79A8",
-      "#FDCB6E", "#636E72", "#B2BEC3", "#1E3799", "#38ADA9",
     ];
 
     this.init();
@@ -127,13 +112,9 @@ class BusinessTripCalendar {
 
   init() {
     this.bindEvents();
+    this.loadEmployees();
     this.updateMonthDisplay();
-    this.initAsync();
-  }
-
-  async initAsync() {
-    await this.loadEmployees();
-    await this.loadBusinessTrips();
+    this.loadBusinessTrips();
     this.renderCalendar();
     this.renderHotelList();
   }
@@ -168,49 +149,66 @@ class BusinessTripCalendar {
     const eventModal = document.getElementById("eventModal");
     eventModal?.addEventListener("hidden.bs.modal", () => this.resetEventForm());
   }
-// employees (Supabase)
-async loadEmployees() {
-  try {
-    const rows = await sbSelect("employees", "&order=name.asc&limit=1000");
-    this.employees = (rows || []).map((r) => ({ id: r.id, name: r.name, color: r.color }));
-  } catch (e) {
-    console.error("社員情報の読み込みに失敗しました:", e);
-    this.employees = [];
-  }
-  this.renderEmployeeColors();
-  this.populateEmployeeSelect();
-}
 
-async upsertEmployeeByName(name) {
-  if (!name) return null;
+  // 社員登録モーダルのカラーパレットを this.colors から動的生成
+  renderEmployeeColorOptions() {
+    const wrap = document.getElementById("employeeColorOptions");
+    const selected = document.getElementById("selectedColor");
+    if (!wrap || !selected) return;
 
-  let emp = this.employees.find((e) => e.name === name);
-  if (emp) return emp;
+    wrap.innerHTML = (this.colors || [])
+      .map((c) => `<div class="color-option" data-color="${c}" style="background-color: ${c};"></div>`)
+      .join("");
 
-  const color = this.colors[this.employees.length % this.colors.length];
-
-  try {
-    const created = await sbUpsert("employees", { name, color }, "name");
-    const row = Array.isArray(created) ? created[0] : created;
-    if (row && row.id) {
-      emp = { id: row.id, name: row.name, color: row.color };
+    // 初期選択
+    const first = wrap.querySelector(".color-option");
+    if (first) {
+      wrap.querySelectorAll(".color-option").forEach((el) => el.classList.remove("selected"));
+      first.classList.add("selected");
+      selected.value = first.dataset.color || "";
+    } else {
+      selected.value = "";
     }
-  } catch (e) {
-    // 競合等があっても再読込すれば拾えることが多い
   }
 
-  if (!emp) {
-    await this.loadEmployees();
-    emp = this.employees.find((e) => e.name === name) || null;
-  } else {
+
+  // employees
+  loadEmployees() {
+    try {
+      const saved = localStorage.getItem(EMPLOYEES_LS_KEY);
+      if (saved) {
+        this.employees = JSON.parse(saved);
+      } else {
+        this.employees = [];
+        this.saveEmployees();
+      }
+      this.renderEmployeeColors();
+      this.populateEmployeeSelect();
+    } catch (e) {
+      console.error("社員情報の読み込みに失敗しました:", e);
+      this.employees = [];
+    }
+  }
+
+  saveEmployees() {
+    localStorage.setItem(EMPLOYEES_LS_KEY, JSON.stringify(this.employees));
+  }
+
+  ensureEmployeeByName(name) {
+    if (!name) return null;
+    let emp = this.employees.find((e) => e.name === name);
+    if (emp) return emp;
+
+    const color = this.colors[this.employees.length % this.colors.length];
+    emp = { id: "emp_" + Date.now() + "_" + Math.floor(Math.random() * 1000), name, color };
     this.employees.push(emp);
+    this.saveEmployees();
     this.renderEmployeeColors();
     this.populateEmployeeSelect();
+    return emp;
   }
-  return emp;
-}
 
-getEmployeeIdByName(name) {
+  getEmployeeIdByName(name) {
     const emp = this.employees.find((e) => e.name === name);
     return emp ? emp.id : null;
   }
@@ -260,15 +258,13 @@ getEmployeeIdByName(name) {
     try {
       const rows = await sbSelect("business_trips", "&order=start_date.asc&limit=1000");
 
-      // DB上の社員名が employees に無ければ自動登録（色付けのため）
-      for (const trip of rows) {
-        if (trip?.employee_name) {
-          await this.upsertEmployeeByName(trip.employee_name);
-        }
-      }
+      // DB上の社員名がローカルに無ければ自動登録（色付けのため）
+      rows.forEach((trip) => {
+        if (trip?.employee_name) this.ensureEmployeeByName(trip.employee_name);
+      });
 
       this.events = rows.map((trip) => {
-        const empId = this.getEmployeeIdByName(trip.employee_name) || null;
+        const empId = this.getEmployeeIdByName(trip.employee_name) || (this.ensureEmployeeByName(trip.employee_name)?.id ?? null);
         return {
           id: trip.id,
           employeeId: empId,
@@ -675,33 +671,34 @@ getEmployeeIdByName(name) {
     const modal = new bootstrap.Modal(modalEl);
 
     document.getElementById("employeeName").value = "";
-    document.querySelectorAll(".color-option").forEach((el) => el.classList.remove("selected"));
-    const first = document.querySelector(".color-option");
-    if (first) first.classList.add("selected");
+    this.renderEmployeeColorOptions();
 
     modal.show();
   }
-async saveEmployee() {
-  const name = (document.getElementById("employeeName").value || "").trim();
-  const color = document.getElementById("selectedColor")?.value || this.colors[0];
 
-  if (!name) {
-    this.showAlert("社員名を入力してください", "warning");
-    return;
-  }
+  saveEmployee() {
+    const name = (document.getElementById("employeeName").value || "").trim();
+    const color = document.getElementById("selectedColor")?.value || this.colors[0];
 
-  try {
-    await sbUpsert("employees", { name, color }, "name");
-    await this.loadEmployees();
+    if (!name) {
+      this.showAlert("社員名を入力してください", "warning");
+      return;
+    }
+
+    // 既にいる場合は追加しない
+    const exists = this.employees.some((e) => e.name === name);
+    if (!exists) {
+      this.employees.push({ id: "emp_" + Date.now(), name, color });
+      this.saveEmployees();
+      this.renderEmployeeColors();
+      this.populateEmployeeSelect();
+    }
+
     bootstrap.Modal.getInstance(document.getElementById("employeeModal"))?.hide();
     this.showAlert("社員を登録しました", "success");
-  } catch (e) {
-    console.error("社員登録エラー:", e);
-    this.showAlert("社員の登録に失敗しました", "danger");
   }
-}
 
-validateEventForm(formData) {
+  validateEventForm(formData) {
     if (!formData.employee_name) {
       this.showAlert("社員を選択してください", "warning");
       return false;
@@ -738,8 +735,8 @@ validateEventForm(formData) {
 
     if (!this.validateEventForm(formData)) return;
 
-    // 社員マスタ（employees）に無ければ作っておく（全員共通）
-    if (formData.employee_name) await this.upsertEmployeeByName(formData.employee_name);
+    // ローカル社員管理のため、社員がいなければ作っておく
+    if (formData.employee_name) this.ensureEmployeeByName(formData.employee_name);
 
     try {
       const eventId = document.getElementById("eventId").value;
