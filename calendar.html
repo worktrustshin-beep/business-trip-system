@@ -174,7 +174,11 @@
                             <label for="eventNotes" class="form-label">備考</label>
                             <textarea class="form-control" id="eventNotes" rows="2" placeholder="特記事項があれば入力してください"></textarea>
                         </div>
-                    </form>
+                    
+      <div id="employeeColorOptions" class="color-options"></div>
+      <input type="hidden" id="selectedColor" value="">
+
+    </form>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">キャンセル</button>
@@ -202,11 +206,24 @@
                         <div class="mb-3">
                             <label for="employeeColor" class="form-label">カラー <span class="text-danger">*</span></label>
                             <div class="color-picker">
-                                <div class="color-options" id="employeeColorOptions"></div>
-                                <input type="hidden" id="selectedColor" value="">
+                                <div class="color-options">
+                                    <div class="color-option" data-color="#FF6B6B" style="background-color: #FF6B6B;"></div>
+                                    <div class="color-option" data-color="#4ECDC4" style="background-color: #4ECDC4;"></div>
+                                    <div class="color-option" data-color="#45B7D1" style="background-color: #45B7D1;"></div>
+                                    <div class="color-option" data-color="#96CEB4" style="background-color: #96CEB4;"></div>
+                                    <div class="color-option" data-color="#FFEAA7" style="background-color: #FFEAA7;"></div>
+                                    <div class="color-option" data-color="#DDA0DD" style="background-color: #DDA0DD;"></div>
+                                    <div class="color-option" data-color="#FFB347" style="background-color: #FFB347;"></div>
+                                    <div class="color-option" data-color="#87CEEB" style="background-color: #87CEEB;"></div>
+                                </div>
+                                <input type="hidden" id="selectedColor" value="#FF6B6B">
                             </div>
                         </div>
-                    </form>
+                    
+      <div id="employeeColorOptions" class="color-options"></div>
+      <input type="hidden" id="selectedColor" value="">
+
+    </form>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">キャンセル</button>
