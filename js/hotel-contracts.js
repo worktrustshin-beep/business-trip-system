@@ -37,6 +37,23 @@ class HotelContractManager {
 
         const modal = document.getElementById('hotelContractModal');
         modal?.addEventListener('hidden.bs.modal', () => this.resetHotelContractForm());
+
+        // 一覧の「編集」「削除」ボタン
+        const list = document.getElementById('hotelContractsList');
+        list?.addEventListener('click', (e) => {
+            const btn = e.target.closest('[data-action]');
+            if (!btn) return;
+
+            const action = btn.getAttribute('data-action');
+            const id = btn.getAttribute('data-id');
+            if (!id) return;
+
+            if (action === 'edit') {
+                this.showHotelContractModal(id);
+            } else if (action === 'delete') {
+                this.confirmAndDeleteContract(id);
+            }
+        });
     }
 
     // ===============================
@@ -115,6 +132,28 @@ class HotelContractManager {
     // ===============================
     // 削除
     // ===============================
+
+    async confirmAndDeleteContract(id) {
+        const c = this.hotelContracts.find(x => x.id === id);
+        const name = c ? c.hotelName : '';
+        const ok = window.confirm(`${name ? name + ' を' : ''}削除しますか？`);
+        if (!ok) return;
+
+        const { error } = await supabaseClient
+            .from('hotel_contracts')
+            .delete()
+            .eq('id', id);
+
+        if (error) {
+            console.error(error);
+            this.showAlert('削除に失敗しました', 'danger');
+            return;
+        }
+
+        this.showAlert('削除しました', 'success');
+        await this.loadHotelContracts();
+    }
+
     async deleteHotelContract() {
         const id = document.getElementById('hotelContractId').value;
         if (!id) return;
@@ -153,10 +192,25 @@ class HotelContractManager {
 
         container.innerHTML = this.hotelContracts.map(c => `
             <div class="hotel-contract-item">
-                <strong>${this.escapeHtml(c.hotelName)}</strong><br>
-                ${c.contractStartDate.toLocaleDateString()} ～ ${c.contractEndDate.toLocaleDateString()}
+                <div class="contract-header">
+                    <div class="contract-name">
+                        ${this.escapeHtml(c.hotelName)}
+                    </div>
+                    <div class="contract-actions">
+                        <button type="button" class="btn btn-outline-secondary btn-sm" data-action="edit" data-id="${c.id}">
+                            <i class="fas fa-edit"></i> 編集
+                        </button>
+                        <button type="button" class="btn btn-outline-danger btn-sm" data-action="delete" data-id="${c.id}">
+                            <i class="fas fa-trash"></i> 削除
+                        </button>
+                    </div>
+                </div>
+                <div class="contract-dates">
+                    ${c.contractStartDate.toLocaleDateString()} ～ ${c.contractEndDate.toLocaleDateString()}
+                </div>
+                ${c.hotelType ? `<div class="contract-payment text-muted">種類: ${this.escapeHtml(c.hotelType)}</div>` : ``}
             </div>
-        `).join('');
+` ).join('');
     }
 
     showHotelContractModal(id = null) {
