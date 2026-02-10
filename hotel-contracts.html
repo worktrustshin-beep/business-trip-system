@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ホテル契約期間管理</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="css/hotel-contracts.css" rel="stylesheet">
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#">
+                <i class="fas fa-hotel"></i> ホテル契約期間管理
+            </a>
+
+        <div class="navbar-nav ms-auto align-items-center">
+            <a href="index.html" class="btn btn-light me-2">
+                <i class="fas fa-list"></i> 出張管理システム
+            </a>
+
+            <a href="calendar.html" class="btn btn-light me-2">
+                <i class="fas fa-calendar-alt"></i> 出張管理カレンダー
+            </a>           
+            <div class="navbar-nav ms-auto">
+                <button class="btn btn-light" id="addHotelContractBtn">
+                    <i class="fas fa-plus"></i> 契約登録
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid mt-3">
+        <div class="row">
+            <!-- 左側：カレンダー表示 -->
+            <div class="col-lg-8">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <div class="d-flex align-items-center">
+                            <button class="btn btn-outline-secondary btn-sm me-2" id="prevBtn">
+                                <i class="fas fa-chevron-left"></i>
+                            </button>
+                            <h5 class="mb-0" id="currentMonth">2024年2月</h5>
+                            <button class="btn btn-outline-secondary btn-sm ms-2" id="nextBtn">
+                                <i class="fas fa-chevron-right"></i>
+                            </button>
+                            <button class="btn btn-outline-primary btn-sm ms-3" id="todayBtn">
+                                今日
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card-body p-0">
+                        <div id="hotelCalendar" class="hotel-calendar-container">
+                            <!-- ホテル契約状況カレンダー -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 右側：ホテル情報一覧 -->
+            <div class="col-lg-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h6 class="mb-0">
+                            <i class="fas fa-list"></i> 契約中ホテル一覧
+                        </h6>
+                    </div>
+                    <div class="card-body p-0">
+                        <div id="hotelContractsList" class="hotel-contracts-list">
+                            <!-- ホテル契約情報はJavaScriptで動的に読み込まれます -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 利用状況サマリー -->
+                <div class="card mt-3">
+                    <div class="card-header">
+                        <h6 class="mb-0">
+                            <i class="fas fa-chart-pie"></i> 利用状況サマリー
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <div id="usageSummary">
+                            <!-- 利用状況はJavaScriptで動的に生成 -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ホテル契約登録・編集モーダル -->
+    <div class="modal fade" id="hotelContractModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="hotelContractModalTitle">ホテル契約登録</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="hotelContractForm">
+                        <input type="hidden" id="hotelContractId">
+                        
+                        <div class="row">
+                            <div class="col-md-8">
+                                <div class="mb-3">
+                                    <label for="hotelName" class="form-label">ホテル名 <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" id="hotelName" required>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label for="hotelType" class="form-label">ホテル種類 <span class="text-danger">*</span></label>
+                                    <select class="form-select" id="hotelType" required>
+                                        <option value="ビジネスホテル">ビジネスホテル</option>
+                                        <option value="マンスリーホテル">マンスリーホテル</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="contractStartDate" class="form-label">契約開始日 <span class="text-danger">*</span></label>
+                                    <input type="date" class="form-control" id="contractStartDate" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="contractEndDate" class="form-label">契約終了日 <span class="text-danger">*</span></label>
+                                    <input type="date" class="form-control" id="contractEndDate" required>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="mb-3">
+                                    <label for="paymentStatus" class="form-label">支払いステータス <span class="text-danger">*</span></label>
+                                    <select class="form-select" id="paymentStatus" required>
+                                        <option value="支払い済み">支払い済み</option>
+                                        <option value="未払い">未払い</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="hotelNotes" class="form-label">備考</label>
+                            <textarea class="form-control" id="hotelNotes" rows="3" placeholder="特記事項があれば入力してください"></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">キャンセル</button>
+                    <button type="button" class="btn btn-primary" id="saveHotelContract">保存</button>
+                    <button type="button" class="btn btn-danger" id="deleteHotelContract" style="display: none;">削除</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 契約延長モーダル -->
+    <div class="modal fade" id="extendContractModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">契約期間延長</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="extendContractForm">
+                        <input type="hidden" id="extendContractId">
+                        <div class="mb-3">
+                            <label for="currentContractPeriod" class="form-label">現在の契約期間</label>
+                            <input type="text" class="form-control" id="currentContractPeriod" readonly>
+                        </div>
+                        <div class="mb-3">
+                            <label for="newContractEndDate" class="form-label">新しい契約終了日 <span class="text-danger">*</span></label>
+                            <input type="date" class="form-control" id="newContractEndDate" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="extensionReason" class="form-label">延長理由</label>
+                            <textarea class="form-control" id="extensionReason" rows="2" placeholder="延長理由があれば入力してください"></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">キャンセル</button>
+                    <button type="button" class="btn btn-primary" id="confirmExtension">延長する</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/hotel-contracts.js"></script>
+</body>
+</html>
