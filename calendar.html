@@ -14,19 +14,25 @@
             <a class="navbar-brand" href="#">
                 <i class="fas fa-calendar-alt"></i> 出張管理カレンダー
             </a>
-            <div class="navbar-nav ms-auto">
-                <a href="index.html" class="btn btn-light me-2">
-                    <i class="fas fa-list"></i> 出張管理システム
-                </a>                
-                <button class="btn btn-light me-2" id="addEmployeeBtn">
-                    <i class="fas fa-user-plus"></i> 社員登録
-                </button>
-                <a href="hotel-contracts.html" class="btn btn-light me-2">
-                    <i class="fas fa-hotel"></i> ホテル管理
-                </a>
-                <button class="btn btn-light" id="viewToggleBtn">
-                    <i class="fas fa-calendar-week"></i> 週表示
-                </button>
+            <!-- スマホでは右上ボタンが横並びで崩れるので、BootstrapのCollapseに入れる -->
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <div class="navbar-nav ms-auto">
+                    <a href="index.html" class="btn btn-light me-2">
+                        <i class="fas fa-list"></i> 出張管理システム
+                    </a>
+                    <button class="btn btn-light me-2" id="addEmployeeBtn">
+                        <i class="fas fa-user-plus"></i> 社員登録
+                    </button>
+                    <a href="hotel-contracts.html" class="btn btn-light me-2">
+                        <i class="fas fa-hotel"></i> ホテル管理
+                    </a>
+                    <button class="btn btn-light" id="viewToggleBtn">
+                        <i class="fas fa-calendar-week"></i> 週表示
+                    </button>
+                </div>
             </div>
         </div>
     </nav>
