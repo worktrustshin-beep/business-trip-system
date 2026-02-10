@@ -16,6 +16,22 @@ const SUPABASE_ANON_KEY = "sb_publishable_JS4Wr6jACtuQ1tcsNdXKAQ_VX1cD35Y"; // P
 // 2) app.js と共通で使うトークン保存キー
 const SB_TOKEN_KEY = "sb_access_token";
 
+
+// 日付ユーティリティ（タイムゾーンずれ対策）
+// new Date('YYYY-MM-DD') はUTC扱いになり、JSTだと前日になることがあるため
+// 画面で扱う日付は必ずローカル基準で YYYY-MM-DD を作る
+function formatYMD(date) {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, "0");
+  const d = String(date.getDate()).padStart(2, "0");
+  return `${y}-${m}-${d}`;
+}
+
+// 'YYYY-MM-DD' をローカル日付として Date にする（UTCずれ防止）
+function parseYMD(ymd) {
+  return new Date(`${ymd}T00:00:00`);
+}
+
 // 3) Supabase REST（PostgREST）ユーティリティ
 function sbHeaders(withAuth = false) {
   const headers = {
@@ -301,7 +317,7 @@ class BusinessTripCalendar {
 
     const cell = document.createElement("div");
     cell.className = "calendar-cell";
-    cell.dataset.date = cellDate.toISOString().split("T")[0];
+    cell.dataset.date = formatYMD(cellDate);
 
     if (cellDate.getMonth() !== month) cell.classList.add("other-month");
     if (cellDate.getTime() === today.getTime()) cell.classList.add("today");
@@ -382,7 +398,7 @@ class BusinessTripCalendar {
 
       const cell = document.createElement("div");
       cell.className = "calendar-cell";
-      cell.dataset.date = date.toISOString().split("T")[0];
+      cell.dataset.date = formatYMD(date);
 
       if (date.getTime() === today.getTime()) cell.classList.add("today");
 
@@ -595,7 +611,7 @@ class BusinessTripCalendar {
     document.getElementById("deleteEvent").style.display = "none";
 
     if (date) {
-      const d = date.toISOString().split("T")[0];
+      const d = formatYMD(date);
       document.getElementById("selectedDate").value = d;
       document.getElementById("eventStartDate").value = d;
       document.getElementById("eventEndDate").value = d;
@@ -682,7 +698,7 @@ class BusinessTripCalendar {
       this.showAlert("開始日と終了日を選択してください", "warning");
       return false;
     }
-    if (new Date(formData.start_date) > new Date(formData.end_date)) {
+    if (parseYMD(formData.start_date) > parseYMD(formData.end_date)) {
       this.showAlert("終了日は開始日より後の日付を選択してください", "warning");
       return false;
     }
@@ -698,8 +714,9 @@ class BusinessTripCalendar {
       start_date: document.getElementById("eventStartDate").value,
       end_date: document.getElementById("eventEndDate").value,
       hotel: document.getElementById("eventHotel").value.trim(),
-      hotel_check_in: document.getElementById("eventHotelCheckIn").value || null,
-      hotel_check_out: document.getElementById("eventHotelCheckOut").value || null,
+      // DB側が NOT NULL の場合があるため、未入力なら出張期間で補完する
+      hotel_check_in: document.getElementById("eventHotelCheckIn").value || document.getElementById("eventStartDate").value,
+      hotel_check_out: document.getElementById("eventHotelCheckOut").value || document.getElementById("eventEndDate").value,
       hotel_type: document.getElementById("eventHotelType").value || null,
       notes: document.getElementById("eventNotes").value.trim(),
     };
