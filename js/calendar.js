@@ -709,7 +709,7 @@ class BusinessTripCalendar {
       hotel: document.getElementById("eventHotel").value.trim(),
       hotel_check_in: document.getElementById("eventHotelCheckIn").value || document.getElementById("eventStartDate").value,
       hotel_check_out: document.getElementById("eventHotelCheckOut").value || document.getElementById("eventEndDate").value,
-      hotel_type: document.getElementById("eventHotelType").value || null,
+      hotel_type: document.getElementById("eventHotelType").value || "未設定",
       notes: document.getElementById("eventNotes").value.trim(),
     };
 
