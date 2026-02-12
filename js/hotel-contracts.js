@@ -71,14 +71,15 @@ class HotelContractManager {
             return;
         }
 
-        this.hotelContracts = data.map(c => ({
+        this.hotelContracts = (data || []).map(c => ({
             id: c.id,
             hotelName: c.hotel_name,
             hotelType: c.hotel_type,
             contractStartDate: new Date(c.contract_start_date),
             contractEndDate: new Date(c.contract_end_date),
             paymentStatus: c.payment_status,
-            notes: ""
+            // ★修正：DBのnotesを保持（消える原因を潰す）
+            notes: c.notes || ""
         }));
 
         this.renderHotelCalendar();
@@ -92,14 +93,13 @@ class HotelContractManager {
         const id = document.getElementById('hotelContractId').value;
 
         const payload = {
-          hotel_name: document.getElementById('hotelName').value.trim(),
-          hotel_type: document.getElementById('hotelType').value,
-          contract_start_date: document.getElementById('contractStartDate').value,
-          contract_end_date: document.getElementById('contractEndDate').value,
-          payment_status: document.getElementById('paymentStatus').value,
-          notes: document.getElementById('hotelNotes').value.trim() || ''
+            hotel_name: document.getElementById('hotelName').value.trim(),
+            hotel_type: document.getElementById('hotelType').value,
+            contract_start_date: document.getElementById('contractStartDate').value,
+            contract_end_date: document.getElementById('contractEndDate').value,
+            payment_status: document.getElementById('paymentStatus').value,
+            notes: document.getElementById('hotelNotes').value.trim() || ''
         };
-
 
         if (!payload.hotel_name) {
             this.showAlert('ホテル名を入力してください', 'warning');
@@ -132,7 +132,6 @@ class HotelContractManager {
     // ===============================
     // 削除
     // ===============================
-
     async confirmAndDeleteContract(id) {
         const c = this.hotelContracts.find(x => x.id === id);
         const name = c ? c.hotelName : '';
@@ -190,6 +189,7 @@ class HotelContractManager {
             return;
         }
 
+        // ★修正：支払いステータスと備考を一覧に表示
         container.innerHTML = this.hotelContracts.map(c => `
             <div class="hotel-contract-item">
                 <div class="contract-header">
@@ -205,12 +205,20 @@ class HotelContractManager {
                         </button>
                     </div>
                 </div>
+
                 <div class="contract-dates">
                     ${c.contractStartDate.toLocaleDateString()} ～ ${c.contractEndDate.toLocaleDateString()}
                 </div>
+
                 ${c.hotelType ? `<div class="contract-payment text-muted">種類: ${this.escapeHtml(c.hotelType)}</div>` : ``}
+
+                <div class="contract-payment">
+                    支払いステータス: ${this.escapeHtml(c.paymentStatus || "-")}
+                </div>
+
+                ${c.notes ? `<div class="contract-payment text-muted">備考: ${this.escapeHtml(c.notes)}</div>` : ``}
             </div>
-` ).join('');
+        `).join('');
     }
 
     showHotelContractModal(id = null) {
