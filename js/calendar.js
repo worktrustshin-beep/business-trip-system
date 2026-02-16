@@ -351,23 +351,20 @@ getEmployeeIdByName(name) {
 
     const dayPeriodEvents = periodEvents.filter((pe) => cellDate >= pe.startDate && cellDate <= pe.endDate);
 
-    if (dayPeriodEvents.length > 0) {
-      dayPeriodEvents.forEach((periodEvent) => {
-        if (cellDate.getTime() === periodEvent.startDate.getTime()) {
-          eventsContainer.appendChild(this.createPeriodEventElement(periodEvent));
-        } else {
-          eventsContainer.appendChild(this.createPeriodEventContinuationElement(periodEvent));
-        }
-      });
-    } else {
-      const periodIds = new Set(periodEvents.map(pe => pe.id));
-      const dayEvents = this.getEventsForDate(cellDate).filter(ev => !periodIds.has(ev.id));
-      dayEvents.forEach((ev) => eventsContainer.appendChild(this.createEventElement(ev, false)));
-    }
+// ① まず帯（3日以上）を描画
+dayPeriodEvents.forEach((periodEvent) => {
+  if (cellDate.getTime() === periodEvent.startDate.getTime()) {
+    eventsContainer.appendChild(this.createPeriodEventElement(periodEvent));
+  } else {
+    eventsContainer.appendChild(this.createPeriodEventContinuationElement(periodEvent));
+  }
+});
 
-
-
-    cell.appendChild(eventsContainer);
+// ② 次に短期イベントも描画（帯がある日でも出す）
+const periodIds = new Set(periodEvents.map(pe => pe.id));
+const dayEvents = this.getEventsForDate(cellDate).filter(ev => !periodIds.has(ev.id));
+dayEvents.forEach((ev) => eventsContainer.appendChild(this.createEventElement(ev, false)));
+cell.appendChild(eventsContainer);
 
     cell.addEventListener("click", (e) => {
       if (!e.target.closest(".calendar-event")) this.showEventModal(cellDate);
