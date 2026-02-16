@@ -363,27 +363,19 @@ dayPeriodEvents.forEach((periodEvent) => {
 // ② 次に短期イベントも描画（帯がある日でも出す）
 const periodIds = new Set(periodEvents.map(pe => pe.id));
 
-// 短期（1〜2日）の予定は、開始日は「名前＋行先」、2日目は「色だけ」を表示
+// 2日以上の短期予定は「開始日だけ」表示（2日目以降は表示しない）
 const cellYMD = new Date(cellDate);
 cellYMD.setHours(0, 0, 0, 0);
 
-const shortEvents = this.getEventsForDate(cellDate)
-  .filter(ev => !periodIds.has(ev.id));
+const dayEvents = this.getEventsForDate(cellDate)
+  .filter(ev => !periodIds.has(ev.id))
+  .filter(ev => {
+    const s = new Date(ev.startDate);
+    s.setHours(0, 0, 0, 0);
+    return s.getTime() === cellYMD.getTime();
+  });
 
-shortEvents.forEach((ev) => {
-  const s = new Date(ev.startDate);
-  const e = new Date(ev.endDate);
-  s.setHours(0, 0, 0, 0);
-  e.setHours(0, 0, 0, 0);
-
-  if (cellYMD.getTime() === s.getTime()) {
-    // 開始日：通常表示
-    eventsContainer.appendChild(this.createEventElement(ev, false));
-  } else {
-    // 2日目（終了日）：色だけ表示
-    eventsContainer.appendChild(this.createEventContinuationElement(ev));
-  }
-});
+dayEvents.forEach((ev) => eventsContainer.appendChild(this.createEventElement(ev, false)));
 cell.appendChild(eventsContainer);
 
     cell.addEventListener("click", (e) => {
