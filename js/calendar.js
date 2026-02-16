@@ -362,7 +362,19 @@ dayPeriodEvents.forEach((periodEvent) => {
 
 // ② 次に短期イベントも描画（帯がある日でも出す）
 const periodIds = new Set(periodEvents.map(pe => pe.id));
-const dayEvents = this.getEventsForDate(cellDate).filter(ev => !periodIds.has(ev.id));
+
+// 2日以上の短期予定は「開始日だけ」表示（2日目以降は表示しない）
+const cellYMD = new Date(cellDate);
+cellYMD.setHours(0, 0, 0, 0);
+
+const dayEvents = this.getEventsForDate(cellDate)
+  .filter(ev => !periodIds.has(ev.id))
+  .filter(ev => {
+    const s = new Date(ev.startDate);
+    s.setHours(0, 0, 0, 0);
+    return s.getTime() === cellYMD.getTime();
+  });
+
 dayEvents.forEach((ev) => eventsContainer.appendChild(this.createEventElement(ev, false)));
 cell.appendChild(eventsContainer);
 
