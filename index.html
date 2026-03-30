@@ -31,9 +31,6 @@
         <a href="./calendar.html" class="btn btn-outline-light btn-sm">
           出張管理カレンダー
         </a>
-        <button id="addBusinessTripBtn" class="btn btn-light btn-sm">
-          ＋ 出張登録
-        </button>
       </div>
     </div>
   </nav>
@@ -115,42 +112,51 @@
       <div class="modal-content">
 
         <div class="modal-header">
-          <h5 class="modal-title">出張登録</h5>
+          <h5 class="modal-title" id="modalTitle">出張登録</h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="閉じる"></button>
         </div>
 
         <div class="modal-body">
-          <div class="row g-3">
-            <div class="col-12 col-md-6">
-              <label class="form-label">社員名</label>
-              <input id="employeeName" type="text" class="form-control" />
-            </div>
+          <form id="businessTripForm">
+            <input type="hidden" id="tripId" />
+            <div class="row g-3">
+              <div class="col-12 col-md-6">
+                <label class="form-label">社員名</label>
+                <input id="employeeName" type="text" class="form-control" />
+              </div>
 
-            <div class="col-12 col-md-6">
-              <label class="form-label">出張先</label>
-              <input id="destination" type="text" class="form-control" />
-            </div>
+              <div class="col-12 col-md-6">
+                <label class="form-label">出張先</label>
+                <select id="destination" class="form-select">
+                  <option value="">選択してください</option>
+                  <option value="札幌">札幌</option>
+                  <option value="名古屋">名古屋</option>
+                  <option value="博多">博多</option>
+                  <option value="大阪">大阪</option>
+                </select>
+              </div>
 
-            <div class="col-12 col-md-6">
-              <label class="form-label">開始日</label>
-              <input id="startDate" type="date" class="form-control" />
-            </div>
+              <div class="col-12 col-md-6">
+                <label class="form-label">開始日</label>
+                <input id="startDate" type="date" class="form-control" />
+              </div>
 
-            <div class="col-12 col-md-6">
-              <label class="form-label">終了日</label>
-              <input id="endDate" type="date" class="form-control" />
-            </div>
+              <div class="col-12 col-md-6">
+                <label class="form-label">終了日</label>
+                <input id="endDate" type="date" class="form-control" />
+              </div>
 
-            <div class="col-12 col-md-6">
-              <label class="form-label">ホテル</label>
-              <input id="hotel" type="text" class="form-control" />
-            </div>
+              <div class="col-12 col-md-6">
+                <label class="form-label">ホテル</label>
+                <input id="hotel" type="text" class="form-control" />
+              </div>
 
-            <div class="col-12 col-md-6">
-              <label class="form-label">備考</label>
-              <input id="notes" type="text" class="form-control" />
+              <div class="col-12 col-md-6">
+                <label class="form-label">備考</label>
+                <input id="notes" type="text" class="form-control" />
+              </div>
             </div>
-          </div>
+          </form>
         </div>
 
         <div class="modal-footer">
