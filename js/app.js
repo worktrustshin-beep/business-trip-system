@@ -136,8 +136,7 @@ class BusinessTripManager {
   }
 
   bindEvents() {
-    document.getElementById("addBusinessTripBtn")?.addEventListener("click", () => this.showAddModal());
-    document.getElementById("saveBusinessTrip")?.addEventListener("click", () => this.saveBusinessTrip());
+        document.getElementById("saveBusinessTrip")?.addEventListener("click", () => this.saveBusinessTrip());
     document.getElementById("searchBtn")?.addEventListener("click", () => this.searchBusinessTrips());
     document.getElementById("clearBtn")?.addEventListener("click", () => this.clearSearch());
     document.getElementById("confirmDelete")?.addEventListener("click", () => this.confirmDelete());
@@ -331,7 +330,7 @@ class BusinessTripManager {
       return false;
     }
     if (!data.destination) {
-      this.showAlert("出張先を入力してください", "warning");
+      this.showAlert("出張先を選択してください", "warning");
       return false;
     }
     if (!data.start_date) {
