@@ -108,6 +108,7 @@ class BusinessTripCalendar {
   constructor() {
     this.currentDate = new Date();
     this.viewMode = "month"; // 'month' or 'week'
+    this.currentRegion = "札幌";
     this.events = [];
     this.employees = [];
 
@@ -134,8 +135,7 @@ class BusinessTripCalendar {
   async initAsync() {
     await this.loadEmployees();
     await this.loadBusinessTrips();
-    this.renderCalendar();
-    this.renderHotelList();
+    this.renderAll();
   }
 
   bindEvents() {
@@ -147,6 +147,12 @@ class BusinessTripCalendar {
     // ビューモード
     document.getElementById("monthView")?.addEventListener("click", () => this.setViewMode("month"));
     document.getElementById("weekView")?.addEventListener("click", () => this.setViewMode("week"));
+
+    // 地域フィルター
+    document.getElementById("regionFilter")?.addEventListener("change", (e) => {
+      this.currentRegion = e.target.value || "札幌";
+      this.renderAll();
+    });
 
     // モーダル操作
     document.getElementById("saveEvent")?.addEventListener("click", () => this.saveEvent());
@@ -225,16 +231,37 @@ getEmployeeIdByName(name) {
     return emp ? emp.color : "#6c757d";
   }
 
+  getFilteredEvents() {
+    return this.events.filter((event) => event.destination === this.currentRegion);
+  }
+
+  getFilteredEmployees() {
+    const employeeIds = new Set(
+      this.getFilteredEvents()
+        .map((event) => event.employeeId)
+        .filter(Boolean)
+    );
+    return this.employees.filter((emp) => employeeIds.has(emp.id));
+  }
+
+  renderAll() {
+    this.renderEmployeeColors();
+    this.renderCalendar();
+    this.renderHotelList();
+  }
+
   renderEmployeeColors() {
     const container = document.getElementById("employeeColors");
     if (!container) return;
 
-    if (!this.employees.length) {
-      container.innerHTML = '<div class="text-muted">社員が未登録です</div>';
+    const targetEmployees = this.getFilteredEmployees();
+
+    if (!targetEmployees.length) {
+      container.innerHTML = '<div class="text-muted">この地域の社員表示はありません</div>';
       return;
     }
 
-    container.innerHTML = this.employees
+    container.innerHTML = targetEmployees
       .map(
         (emp) => `
         <div class="employee-color-item">
@@ -284,8 +311,7 @@ getEmployeeIdByName(name) {
         };
       });
 
-      this.renderCalendar();
-      this.renderHotelList();
+      this.renderAll();
     } catch (e) {
       console.error("出張情報の読み込みに失敗しました:", e);
       this.showAlert("出張情報の読み込みに失敗しました", "danger");
@@ -438,7 +464,7 @@ cell.appendChild(eventsContainer);
 
   processPeriodEvents() {
     const periodEvents = [];
-    this.events.forEach((event) => {
+    this.getFilteredEvents().forEach((event) => {
       if (!event.startDate || !event.endDate) return;
 
       const startDate = new Date(event.startDate);
@@ -536,7 +562,7 @@ cell.appendChild(eventsContainer);
     const target = new Date(date);
     target.setHours(0, 0, 0, 0);
 
-    return this.events.filter((ev) => {
+    return this.getFilteredEvents().filter((ev) => {
       if (!ev.startDate || !ev.endDate) return false;
 
       const s = new Date(ev.startDate);
@@ -554,7 +580,7 @@ cell.appendChild(eventsContainer);
     if (!container) return;
 
     const hotels = {};
-    this.events.forEach((ev) => {
+    this.getFilteredEvents().forEach((ev) => {
       if (!ev.hotel) return;
       if (!hotels[ev.hotel]) hotels[ev.hotel] = [];
       hotels[ev.hotel].push(ev);
@@ -591,13 +617,13 @@ cell.appendChild(eventsContainer);
     else this.currentDate.setDate(this.currentDate.getDate() + direction * 7);
 
     this.updateMonthDisplay();
-    this.renderCalendar();
+    this.renderAll();
   }
 
   goToToday() {
     this.currentDate = new Date();
     this.updateMonthDisplay();
-    this.renderCalendar();
+    this.renderAll();
   }
 
   setViewMode(mode) {
@@ -605,7 +631,7 @@ cell.appendChild(eventsContainer);
     document.querySelectorAll('[id$="View"]').forEach((btn) => btn.classList.remove("active"));
     const activeBtn = document.getElementById(mode + "View");
     if (activeBtn) activeBtn.classList.add("active");
-    this.renderCalendar();
+    this.renderAll();
   }
 
   updateMonthDisplay() {
@@ -625,6 +651,7 @@ cell.appendChild(eventsContainer);
     document.getElementById("eventId").value = "";
     document.getElementById("eventModalTitle").textContent = "出張登録";
     document.getElementById("deleteEvent").style.display = "none";
+    document.getElementById("eventDestination").value = this.currentRegion;
 
     if (date) {
       const d = formatDateLocal(date);
@@ -706,7 +733,7 @@ validateEventForm(formData) {
       return false;
     }
     if (!formData.destination) {
-      this.showAlert("出張先を入力してください", "warning");
+      this.showAlert("出張先を選択してください", "warning");
       return false;
     }
     if (!formData.start_date || !formData.end_date) {
