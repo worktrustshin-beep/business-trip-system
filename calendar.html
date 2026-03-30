@@ -11,9 +11,21 @@
 <body>
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
         <div class="container-fluid">
-            <a class="navbar-brand" href="#">
-                <i class="fas fa-calendar-alt"></i> 出張管理カレンダー
-            </a>
+            <div class="d-flex align-items-center flex-wrap gap-2 navbar-title-area">
+                <a class="navbar-brand mb-0" href="#">
+                    <i class="fas fa-calendar-alt"></i> 出張管理カレンダー
+                </a>
+                <div class="region-filter-wrap">
+                    <label for="regionFilter" class="text-white small mb-0 me-1">地域</label>
+                    <select id="regionFilter" class="form-select form-select-sm">
+                        <option value="札幌" selected>札幌</option>
+                        <option value="名古屋">名古屋</option>
+                        <option value="博多">博多</option>
+                        <option value="大阪">大阪</option>
+                    </select>
+                </div>
+            </div>
+
             <!-- スマホでは右上ボタンが横並びで崩れるので、BootstrapのCollapseに入れる -->
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
@@ -113,19 +125,25 @@
                     <form id="eventForm">
                         <input type="hidden" id="eventId">
                         <input type="hidden" id="selectedDate">
-                        
+
                         <div class="mb-3">
                             <label for="eventEmployee" class="form-label">社員名 <span class="text-danger">*</span></label>
                             <select class="form-select" id="eventEmployee" required>
                                 <option value="">社員を選択してください</option>
                             </select>
                         </div>
-                        
+
                         <div class="mb-3">
                             <label for="eventDestination" class="form-label">出張先 <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" id="eventDestination" required>
+                            <select class="form-select" id="eventDestination" required>
+                                <option value="">選択してください</option>
+                                <option value="札幌">札幌</option>
+                                <option value="名古屋">名古屋</option>
+                                <option value="博多">博多</option>
+                                <option value="大阪">大阪</option>
+                            </select>
                         </div>
-                        
+
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="mb-3">
@@ -140,7 +158,7 @@
                                 </div>
                             </div>
                         </div>
-                        
+
                         <div class="mb-3">
                             <label for="eventHotel" class="form-label">ホテル名</label>
                             <input type="text" class="form-control" id="eventHotel" placeholder="滞在先のホテル名">
@@ -169,16 +187,12 @@
                                 <option value="マンスリーホテル">マンスリーホテル</option>
                             </select>
                         </div>
-                        
+
                         <div class="mb-3">
                             <label for="eventNotes" class="form-label">備考</label>
                             <textarea class="form-control" id="eventNotes" rows="2" placeholder="特記事項があれば入力してください"></textarea>
                         </div>
-                    
-      <div id="employeeColorOptions" class="color-options"></div>
-      <input type="hidden" id="selectedColor" value="">
-
-    </form>
+                    </form>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">キャンセル</button>
@@ -219,11 +233,7 @@
                                 <input type="hidden" id="selectedColor" value="#FF6B6B">
                             </div>
                         </div>
-                    
-      <div id="employeeColorOptions" class="color-options"></div>
-      <input type="hidden" id="selectedColor" value="">
-
-    </form>
+                    </form>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">キャンセル</button>
