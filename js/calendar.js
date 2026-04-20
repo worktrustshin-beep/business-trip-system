@@ -496,19 +496,17 @@ cell.appendChild(eventsContainer);
 
     const titleEl = document.createElement("div");
     titleEl.className = "event-title";
-    titleEl.textContent = periodEvent.employeeName;
+    const titleText = `${periodEvent.employeeName}（${periodEvent.destination}）`;
+    titleEl.textContent = titleText;
 
     const periodEl = document.createElement("div");
     periodEl.className = "event-period";
-    periodEl.textContent = `${periodEvent.startDate.getMonth() + 1}/${periodEvent.startDate.getDate()}～${periodEvent.endDate.getMonth() + 1}/${periodEvent.endDate.getDate()}`;
-
-    const locationEl = document.createElement("div");
-    locationEl.className = "event-location";
-    locationEl.textContent = periodEvent.destination;
+    const periodText = `${periodEvent.startDate.getMonth() + 1}/${periodEvent.startDate.getDate()}～${periodEvent.endDate.getMonth() + 1}/${periodEvent.endDate.getDate()}`;
+    periodEl.textContent = periodText;
+    eventEl.title = `${titleText} ${periodText}`;
 
     eventEl.appendChild(titleEl);
     eventEl.appendChild(periodEl);
-    eventEl.appendChild(locationEl);
 
     eventEl.addEventListener("click", (e) => {
       e.stopPropagation();
@@ -541,14 +539,17 @@ cell.appendChild(eventsContainer);
 
     const titleEl = document.createElement("div");
     titleEl.className = "event-title";
-    titleEl.textContent = event.employeeName;
+    const titleText = `${event.employeeName}（${event.destination}）`;
+    titleEl.textContent = titleText;
 
-    const locationEl = document.createElement("div");
-    locationEl.className = "event-location";
-    locationEl.textContent = event.destination;
+    const periodEl = document.createElement("div");
+    periodEl.className = "event-period";
+    const periodText = `${event.startDate.getMonth() + 1}/${event.startDate.getDate()}～${event.endDate.getMonth() + 1}/${event.endDate.getDate()}`;
+    periodEl.textContent = periodText;
+    eventEl.title = `${titleText} ${periodText}`;
 
     eventEl.appendChild(titleEl);
-    if (!isWeekView) eventEl.appendChild(locationEl);
+    eventEl.appendChild(periodEl);
 
     eventEl.addEventListener("click", (e) => {
       e.stopPropagation();
