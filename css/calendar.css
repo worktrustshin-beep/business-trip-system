@@ -19,7 +19,7 @@ body {
 /* カレンダーヘッダー */
 .calendar-header {
     display: grid;
-    grid-template-columns: repeat(7, 1fr);
+    grid-template-columns: repeat(7, minmax(0, 1fr));
     background: #f8f9fa;
     border-bottom: 1px solid #dee2e6;
 }
@@ -39,7 +39,7 @@ body {
 /* カレンダーグリッド */
 .calendar-grid {
     display: grid;
-    grid-template-columns: repeat(7, 1fr);
+    grid-template-columns: repeat(7, minmax(0, 1fr));
     grid-template-rows: repeat(6, minmax(0, 1fr));
     min-height: 0;
 }
@@ -55,6 +55,7 @@ body {
     transition: background-color 0.2s ease;
     display: flex;
     flex-direction: column;
+    min-width: 0;
 }
 
 .calendar-cell:hover {
@@ -524,6 +525,124 @@ body {
     
     .calendar-event {
         font-size: 0.6rem;
+    }
+}
+
+/* スマホでは月全体の視認性を優先し、イベントは色バーに寄せる */
+@media (max-width: 576px) {
+    html,
+    body {
+        max-width: 100%;
+        overflow-x: hidden;
+    }
+
+    .container-fluid.mt-3 {
+        padding-left: 6px;
+        padding-right: 6px;
+        overflow-x: hidden;
+    }
+
+    .container-fluid.mt-3 > .row {
+        margin-left: 0;
+        margin-right: 0;
+    }
+
+    .container-fluid.mt-3 > .row > [class*="col-"] {
+        padding-left: 0;
+        padding-right: 0;
+    }
+
+    .col-lg-8 > .card {
+        border-radius: 6px;
+        overflow: hidden;
+    }
+
+    .col-lg-8 > .card > .card-header {
+        padding: 6px;
+    }
+
+    #currentMonth {
+        font-size: 0.95rem;
+    }
+
+    .calendar-container,
+    .calendar-header,
+    .calendar-grid {
+        width: 100%;
+        max-width: 100%;
+    }
+
+    .calendar-header-cell {
+        min-width: 0;
+        padding: 6px 0;
+        font-size: 0.68rem;
+    }
+
+    .calendar-grid {
+        min-height: 390px;
+    }
+
+    .calendar-cell {
+        min-width: 0;
+        min-height: 0;
+        padding: 3px 2px;
+        overflow: hidden;
+    }
+
+    .date-number {
+        font-size: 0.68rem;
+        margin-bottom: 3px;
+    }
+
+    .calendar-events {
+        gap: 3px;
+        overflow: hidden;
+    }
+
+    .calendar-event,
+    .period-event {
+        width: 100%;
+        height: 14px;
+        min-height: 14px;
+        padding: 1px 2px;
+        margin: 0;
+        border-radius: 4px;
+        box-shadow: none;
+        text-shadow: 0 1px 1px rgba(0,0,0,0.35);
+        transform: none;
+    }
+
+    .calendar-event:hover,
+    .period-event:hover {
+        transform: none;
+        box-shadow: none;
+    }
+
+    .calendar-event .event-title,
+    .period-event .event-title {
+        display: block;
+        font-size: 0.55rem;
+        line-height: 12px;
+        margin: 0;
+        max-width: 100%;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .calendar-event .event-period,
+    .period-event .event-period,
+    .period-event .event-location {
+        display: none;
+    }
+
+    .period-event.cont {
+        font-size: 0;
+        line-height: 0;
+    }
+
+    .col-lg-4 {
+        margin-top: 10px;
     }
 }
 
