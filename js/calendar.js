@@ -641,9 +641,11 @@ cell.appendChild(eventsContainer);
     }
 
     const start = new Date(this.currentDate.getFullYear(), this.currentDate.getMonth(), 1);
+    start.setDate(start.getDate() - start.getDay());
     start.setHours(0, 0, 0, 0);
 
-    const end = new Date(this.currentDate.getFullYear(), this.currentDate.getMonth() + 1, 0);
+    const end = new Date(start);
+    end.setDate(start.getDate() + 41);
     end.setHours(23, 59, 59, 999);
 
     return { start, end };
