@@ -392,15 +392,27 @@ body {
     margin-bottom: 4px;
 }
 
+.hotel-guest-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 8px;
+    align-items: center;
+    padding: 3px 0;
+}
+
 .hotel-guests {
     font-size: 0.85rem;
     color: #6c757d;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .hotel-dates {
     font-size: 0.8rem;
     color: #6c757d;
-    margin-top: 4px;
+    white-space: nowrap;
 }
 
 /* 社員カラー */

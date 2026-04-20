@@ -589,36 +589,88 @@ cell.appendChild(eventsContainer);
     const container = document.getElementById("hotelList");
     if (!container) return;
 
+    const displayRange = this.getCurrentDisplayRange();
     const hotels = {};
     this.getFilteredEvents().forEach((ev) => {
       if (!ev.hotel) return;
+      if (!this.doesHotelStayOverlapRange(ev, displayRange.start, displayRange.end)) return;
       if (!hotels[ev.hotel]) hotels[ev.hotel] = [];
       hotels[ev.hotel].push(ev);
     });
 
     if (!Object.keys(hotels).length) {
-      container.innerHTML = '<div class="text-center text-muted py-4">ホテル情報がありません</div>';
+      container.innerHTML = '<div class="text-center text-muted py-4">この期間のホテル情報はありません</div>';
       return;
     }
 
     container.innerHTML = Object.entries(hotels)
       .map(([hotelName, events]) => {
-        const uniqueGuests = [...new Set(events.map((e) => e.employeeName))];
-        const latestEvent = events.reduce((latest, cur) => (cur.endDate > latest.endDate ? cur : latest), events[0]);
-
         return `
           <div class="hotel-item">
             <div class="hotel-name">${this.escapeHtml(hotelName)}</div>
-            <div class="hotel-guests">
-              <i class="fas fa-users"></i> ${this.escapeHtml(uniqueGuests.join(", "))}
-            </div>
-            <div class="hotel-dates">
-              <i class="fas fa-calendar"></i> 最終宿泊: ${latestEvent.endDate ? latestEvent.endDate.toLocaleDateString("ja-JP") : "-"}
-            </div>
+            ${events
+              .sort((a, b) => this.getHotelStayStart(a) - this.getHotelStayStart(b))
+              .map((event) => `
+                <div class="hotel-guest-row">
+                  <div class="hotel-guests">
+                    <i class="fas fa-user"></i> ${this.escapeHtml(event.employeeName)}
+                  </div>
+                  <div class="hotel-dates">
+                    <i class="fas fa-calendar"></i> ${this.formatHotelStayRange(event)}
+                  </div>
+                </div>
+              `)
+              .join("")}
           </div>
         `;
       })
       .join("");
+  }
+
+  getCurrentDisplayRange() {
+    if (this.viewMode === "week") {
+      const start = new Date(this.currentDate);
+      start.setDate(start.getDate() - start.getDay());
+      start.setHours(0, 0, 0, 0);
+
+      const end = new Date(start);
+      end.setDate(start.getDate() + 6);
+      end.setHours(23, 59, 59, 999);
+
+      return { start, end };
+    }
+
+    const start = new Date(this.currentDate.getFullYear(), this.currentDate.getMonth(), 1);
+    start.setHours(0, 0, 0, 0);
+
+    const end = new Date(this.currentDate.getFullYear(), this.currentDate.getMonth() + 1, 0);
+    end.setHours(23, 59, 59, 999);
+
+    return { start, end };
+  }
+
+  doesHotelStayOverlapRange(event, rangeStart, rangeEnd) {
+    const stayStart = this.getHotelStayStart(event);
+    const stayEnd = this.getHotelStayEnd(event);
+    if (!stayStart || !stayEnd) return false;
+
+    return stayStart <= rangeEnd && stayEnd >= rangeStart;
+  }
+
+  getHotelStayStart(event) {
+    return event.hotelCheckIn ? new Date(event.hotelCheckIn) : event.startDate;
+  }
+
+  getHotelStayEnd(event) {
+    return event.hotelCheckOut ? new Date(event.hotelCheckOut) : event.endDate;
+  }
+
+  formatHotelStayRange(event) {
+    const stayStart = this.getHotelStayStart(event);
+    const stayEnd = this.getHotelStayEnd(event);
+    if (!stayStart || !stayEnd) return "-";
+
+    return `${stayStart.getMonth() + 1}/${stayStart.getDate()}～${stayEnd.getMonth() + 1}/${stayEnd.getDate()}`;
   }
 
   // navigation
