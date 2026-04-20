@@ -15,6 +15,7 @@ const supabaseClient = supabase.createClient(
 class HotelContractManager {
     constructor() {
         this.currentDate = new Date();
+        this.currentRegion = '札幌';
         this.hotelContracts = [];
         this.init();
     }
@@ -34,6 +35,11 @@ class HotelContractManager {
         document.getElementById('saveHotelContract')?.addEventListener('click', () => this.saveHotelContract());
         document.getElementById('deleteHotelContract')?.addEventListener('click', () => this.deleteHotelContract());
         document.getElementById('addHotelContractBtn')?.addEventListener('click', () => this.showHotelContractModal());
+        document.getElementById('regionFilter')?.addEventListener('change', (e) => {
+            this.currentRegion = e.target.value || '札幌';
+            this.renderHotelCalendar();
+            this.renderHotelContractsList();
+        });
 
         const modal = document.getElementById('hotelContractModal');
         modal?.addEventListener('hidden.bs.modal', () => this.resetHotelContractForm());
@@ -75,6 +81,7 @@ class HotelContractManager {
             id: c.id,
             hotelName: c.hotel_name,
             hotelType: c.hotel_type,
+            region: c.region || '札幌',
             contractStartDate: new Date(c.contract_start_date),
             contractEndDate: new Date(c.contract_end_date),
             paymentStatus: c.payment_status,
@@ -94,6 +101,7 @@ class HotelContractManager {
 
         const payload = {
             hotel_name: document.getElementById('hotelName').value.trim(),
+            region: document.getElementById('hotelRegion')?.value || this.currentRegion,
             hotel_type: document.getElementById('hotelType').value,
             contract_start_date: document.getElementById('contractStartDate').value,
             contract_end_date: document.getElementById('contractEndDate').value,
@@ -116,6 +124,21 @@ class HotelContractManager {
             ({ error } = await supabaseClient
                 .from('hotel_contracts')
                 .insert(payload));
+        }
+
+        if (error && this.isMissingRegionColumnError(error)) {
+            const fallbackPayload = { ...payload };
+            delete fallbackPayload.region;
+            if (id) {
+                ({ error } = await supabaseClient
+                    .from('hotel_contracts')
+                    .update(fallbackPayload)
+                    .eq('id', id));
+            } else {
+                ({ error } = await supabaseClient
+                    .from('hotel_contracts')
+                    .insert(fallbackPayload));
+            }
         }
 
         if (error) {
@@ -184,13 +207,15 @@ class HotelContractManager {
         const container = document.getElementById('hotelContractsList');
         if (!container) return;
 
-        if (this.hotelContracts.length === 0) {
-            container.innerHTML = '<div class="text-muted">契約中のホテルはありません</div>';
+        const contracts = this.getFilteredHotelContracts();
+
+        if (contracts.length === 0) {
+            container.innerHTML = '<div class="text-muted">この地域の契約中ホテルはありません</div>';
             return;
         }
 
         // ★修正：支払いステータスと備考を一覧に表示
-        container.innerHTML = this.hotelContracts.map(c => `
+        container.innerHTML = contracts.map(c => `
             <div class="hotel-contract-item">
                 <div class="contract-header">
                     <div class="contract-name">
@@ -212,6 +237,10 @@ class HotelContractManager {
 
                 ${c.hotelType ? `<div class="contract-payment text-muted">種類: ${this.escapeHtml(c.hotelType)}</div>` : ``}
 
+                <div class="contract-payment text-muted">
+                    地域: ${this.escapeHtml(c.region)}
+                </div>
+
                 <div class="contract-payment">
                     支払いステータス: ${this.escapeHtml(c.paymentStatus || "-")}
                 </div>
@@ -228,6 +257,7 @@ class HotelContractManager {
 
             document.getElementById('hotelContractId').value = c.id;
             document.getElementById('hotelName').value = c.hotelName;
+            document.getElementById('hotelRegion').value = c.region || this.currentRegion;
             document.getElementById('hotelType').value = c.hotelType;
             document.getElementById('contractStartDate').value = c.contractStartDate.toISOString().split('T')[0];
             document.getElementById('contractEndDate').value = c.contractEndDate.toISOString().split('T')[0];
@@ -243,6 +273,8 @@ class HotelContractManager {
     resetHotelContractForm() {
         document.getElementById('hotelContractForm')?.reset();
         document.getElementById('hotelContractId').value = '';
+        const region = document.getElementById('hotelRegion');
+        if (region) region.value = this.currentRegion;
     }
 
     navigate(dir) {
@@ -257,6 +289,19 @@ class HotelContractManager {
 
     showAlert(msg, type) {
         alert(msg);
+    }
+
+    getFilteredHotelContracts() {
+        return this.hotelContracts.filter(c => (c.region || '札幌') === this.currentRegion);
+    }
+
+    isMissingRegionColumnError(error) {
+        const message = `${error?.message || ''} ${error?.details || ''} ${error?.hint || ''}`;
+        return message.includes('region') && (
+            message.includes('column') ||
+            message.includes('schema cache') ||
+            message.includes('Could not find')
+        );
     }
 
     escapeHtml(text) {

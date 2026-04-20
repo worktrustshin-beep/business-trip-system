@@ -11,9 +11,20 @@
 <body>
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
         <div class="container-fluid">
-            <a class="navbar-brand" href="#">
-                <i class="fas fa-hotel"></i> ホテル契約期間管理
-            </a>
+            <div class="d-flex align-items-center flex-wrap gap-2">
+                <a class="navbar-brand mb-0" href="#">
+                    <i class="fas fa-hotel"></i> ホテル契約期間管理
+                </a>
+                <div class="d-flex align-items-center">
+                    <label for="regionFilter" class="text-white small mb-0 me-1">地域</label>
+                    <select id="regionFilter" class="form-select form-select-sm">
+                        <option value="札幌" selected>札幌</option>
+                        <option value="名古屋">名古屋</option>
+                        <option value="博多">博多</option>
+                        <option value="大阪">大阪</option>
+                    </select>
+                </div>
+            </div>
 
         <div class="navbar-nav ms-auto align-items-center">
             <a href="index.html" class="btn btn-light me-2">
@@ -28,6 +39,7 @@
                     <i class="fas fa-plus"></i> 契約登録
                 </button>
             </div>
+        </div>
         </div>
     </nav>
 
@@ -78,13 +90,24 @@
                         <input type="hidden" id="hotelContractId">
                         
                         <div class="row">
-                            <div class="col-md-8">
+                            <div class="col-md-6">
                                 <div class="mb-3">
                                     <label for="hotelName" class="form-label">ホテル名 <span class="text-danger">*</span></label>
                                     <input type="text" class="form-control" id="hotelName" required>
                                 </div>
                             </div>
-                            <div class="col-md-4">
+                            <div class="col-md-3">
+                                <div class="mb-3">
+                                    <label for="hotelRegion" class="form-label">地域 <span class="text-danger">*</span></label>
+                                    <select class="form-select" id="hotelRegion" required>
+                                        <option value="札幌">札幌</option>
+                                        <option value="名古屋">名古屋</option>
+                                        <option value="博多">博多</option>
+                                        <option value="大阪">大阪</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
                                 <div class="mb-3">
                                     <label for="hotelType" class="form-label">ホテル種類 <span class="text-danger">*</span></label>
                                     <select class="form-select" id="hotelType" required>
