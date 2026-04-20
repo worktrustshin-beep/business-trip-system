@@ -379,7 +379,7 @@ getEmployeeIdByName(name) {
 
 // ① まず帯（3日以上）を描画
 dayPeriodEvents.forEach((periodEvent) => {
-  if (cellDate.getTime() === periodEvent.startDate.getTime()) {
+  if (this.shouldShowPeriodLabel(cellDate, periodEvent, month)) {
     eventsContainer.appendChild(this.createPeriodEventElement(periodEvent));
   } else {
     eventsContainer.appendChild(this.createPeriodEventContinuationElement(periodEvent));
@@ -487,6 +487,15 @@ cell.appendChild(eventsContainer);
       }
     });
     return periodEvents;
+  }
+
+  shouldShowPeriodLabel(cellDate, periodEvent, currentMonth) {
+    if (cellDate.getTime() === periodEvent.startDate.getTime()) return true;
+
+    const isFirstDayOfCurrentMonth =
+      cellDate.getMonth() === currentMonth && cellDate.getDate() === 1;
+
+    return isFirstDayOfCurrentMonth && periodEvent.startDate < cellDate;
   }
 
   createPeriodEventElement(periodEvent) {
