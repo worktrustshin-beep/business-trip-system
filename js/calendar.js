@@ -306,7 +306,9 @@ getEmployeeIdByName(name) {
           hotel: trip.hotel || "",
           hotelCheckIn: trip.hotel_check_in || null,
           hotelCheckOut: trip.hotel_check_out || null,
-          hotelType: trip.hotel_type || "",
+          hotel2: trip.hotel_2 || "",
+          hotel2CheckIn: trip.hotel_2_check_in || null,
+          hotel2CheckOut: trip.hotel_2_check_out || null,
           notes: trip.notes || "",
         };
       });
@@ -377,20 +379,18 @@ getEmployeeIdByName(name) {
 
     const dayPeriodEvents = periodEvents.filter((pe) => cellDate >= pe.startDate && cellDate <= pe.endDate);
 
-// ① まず帯（3日以上）を描画
-dayPeriodEvents.forEach((periodEvent) => {
-  if (this.shouldShowPeriodLabel(cellDate, periodEvent, month)) {
-    eventsContainer.appendChild(this.createPeriodEventElement(periodEvent));
-  } else {
-    eventsContainer.appendChild(this.createPeriodEventContinuationElement(periodEvent));
-  }
-});
+    dayPeriodEvents.forEach((periodEvent) => {
+      if (this.shouldShowPeriodLabel(cellDate, periodEvent, month)) {
+        eventsContainer.appendChild(this.createPeriodEventElement(periodEvent));
+      } else {
+        eventsContainer.appendChild(this.createPeriodEventContinuationElement(periodEvent));
+      }
+    });
 
-// ② 次に短期イベントも描画（帯がある日でも出す）
-const periodIds = new Set(periodEvents.map(pe => pe.id));
-const dayEvents = this.getEventsForDate(cellDate).filter(ev => !periodIds.has(ev.id));
-dayEvents.forEach((ev) => eventsContainer.appendChild(this.createEventElement(ev, false)));
-cell.appendChild(eventsContainer);
+    const periodIds = new Set(periodEvents.map(pe => pe.id));
+    const dayEvents = this.getEventsForDate(cellDate).filter(ev => !periodIds.has(ev.id));
+    dayEvents.forEach((ev) => eventsContainer.appendChild(this.createEventElement(ev, false)));
+    cell.appendChild(eventsContainer);
 
     cell.addEventListener("click", (e) => {
       if (!e.target.closest(".calendar-event")) this.showEventModal(cellDate);
@@ -592,10 +592,11 @@ cell.appendChild(eventsContainer);
     const displayRange = this.getCurrentDisplayRange();
     const hotels = {};
     this.getFilteredEvents().forEach((ev) => {
-      if (!ev.hotel) return;
-      if (!this.doesHotelStayOverlapRange(ev, displayRange.start, displayRange.end)) return;
-      if (!hotels[ev.hotel]) hotels[ev.hotel] = [];
-      hotels[ev.hotel].push(ev);
+      this.getHotelStayEntries(ev).forEach((hotelStay) => {
+        if (!this.doesHotelStayOverlapRange(hotelStay, displayRange.start, displayRange.end)) return;
+        if (!hotels[hotelStay.hotelName]) hotels[hotelStay.hotelName] = [];
+        hotels[hotelStay.hotelName].push(hotelStay);
+      });
     });
 
     if (!Object.keys(hotels).length) {
@@ -660,10 +661,12 @@ cell.appendChild(eventsContainer);
   }
 
   getHotelStayStart(event) {
+    if (event.stayStart) return event.stayStart;
     return event.hotelCheckIn ? new Date(event.hotelCheckIn) : event.startDate;
   }
 
   getHotelStayEnd(event) {
+    if (event.stayEnd) return event.stayEnd;
     return event.hotelCheckOut ? new Date(event.hotelCheckOut) : event.endDate;
   }
 
@@ -745,7 +748,11 @@ cell.appendChild(eventsContainer);
         trip.hotel_check_in ? String(trip.hotel_check_in).split("T")[0] : "";
       document.getElementById("eventHotelCheckOut").value =
         trip.hotel_check_out ? String(trip.hotel_check_out).split("T")[0] : "";
-      document.getElementById("eventHotelType").value = trip.hotel_type || "";
+      document.getElementById("eventHotel2").value = trip.hotel_2 || "";
+      document.getElementById("eventHotel2CheckIn").value =
+        trip.hotel_2_check_in ? String(trip.hotel_2_check_in).split("T")[0] : "";
+      document.getElementById("eventHotel2CheckOut").value =
+        trip.hotel_2_check_out ? String(trip.hotel_2_check_out).split("T")[0] : "";
       document.getElementById("eventNotes").value = trip.notes || "";
 
       document.getElementById("eventModalTitle").textContent = "出張編集";
@@ -791,7 +798,7 @@ async saveEmployee() {
   }
 }
 
-validateEventForm(formData) {
+  validateEventForm(formData) {
     if (!formData.employee_name) {
       this.showAlert("社員を選択してください", "warning");
       return false;
@@ -808,6 +815,15 @@ validateEventForm(formData) {
       this.showAlert("終了日は開始日より後の日付を選択してください", "warning");
       return false;
     }
+    if (!this.validateHotelStay(formData, "hotel", "ホテル1")) return false;
+    if (!this.validateHotelStay(formData, "hotel_2", "ホテル2")) return false;
+
+    if (formData.hotel_check_in && formData.hotel_2_check_in) {
+      if (new Date(formData.hotel_check_out) > new Date(formData.hotel_2_check_in)) {
+        this.showAlert("ホテル1とホテル2の滞在期間が重複しています", "warning");
+        return false;
+      }
+    }
     return true;
   }
 
@@ -820,9 +836,11 @@ validateEventForm(formData) {
       start_date: document.getElementById("eventStartDate").value,
       end_date: document.getElementById("eventEndDate").value,
       hotel: document.getElementById("eventHotel").value.trim(),
-      hotel_check_in: document.getElementById("eventHotelCheckIn").value || document.getElementById("eventStartDate").value,
-      hotel_check_out: document.getElementById("eventHotelCheckOut").value || document.getElementById("eventEndDate").value,
-      hotel_type: document.getElementById("eventHotelType").value || "未設定",
+      hotel_check_in: document.getElementById("eventHotelCheckIn").value || null,
+      hotel_check_out: document.getElementById("eventHotelCheckOut").value || null,
+      hotel_2: document.getElementById("eventHotel2").value.trim(),
+      hotel_2_check_in: document.getElementById("eventHotel2CheckIn").value || null,
+      hotel_2_check_out: document.getElementById("eventHotel2CheckOut").value || null,
       notes: document.getElementById("eventNotes").value.trim(),
     };
 
@@ -879,6 +897,69 @@ validateEventForm(formData) {
     document.getElementById("eventForm")?.reset();
     const id = document.getElementById("eventId");
     if (id) id.value = "";
+  }
+
+  validateHotelStay(formData, prefix, label) {
+    const hotelName = formData[prefix] || "";
+    const checkIn = formData[`${prefix}_check_in`] || "";
+    const checkOut = formData[`${prefix}_check_out`] || "";
+
+    if (!hotelName && !checkIn && !checkOut) return true;
+
+    if ((checkIn || checkOut) && !hotelName) {
+      this.showAlert(`${label}を入力してください`, "warning");
+      return false;
+    }
+
+    if (!checkIn && !checkOut) return true;
+
+    if (!checkIn || !checkOut) {
+      this.showAlert(`${label}の滞在開始日と終了日は両方入力してください`, "warning");
+      return false;
+    }
+
+    if (new Date(checkIn) > new Date(checkOut)) {
+      this.showAlert(`${label}の終了日は開始日以降にしてください`, "warning");
+      return false;
+    }
+
+    if (new Date(checkIn) < new Date(formData.start_date) || new Date(checkOut) > new Date(formData.end_date)) {
+      this.showAlert(`${label}の滞在期間は出張期間内で入力してください`, "warning");
+      return false;
+    }
+
+    return true;
+  }
+
+  getHotelStayEntries(event) {
+    const tripStart = event.startDate || null;
+    const tripEnd = event.endDate || null;
+    const hotels = [
+      {
+        name: event.hotel || "",
+        checkIn: event.hotelCheckIn,
+        checkOut: event.hotelCheckOut,
+      },
+      {
+        name: event.hotel2 || "",
+        checkIn: event.hotel2CheckIn,
+        checkOut: event.hotel2CheckOut,
+      },
+    ];
+
+    return hotels
+      .filter((hotel) => hotel.name)
+      .map((hotel) => {
+        const stayStart = hotel.checkIn ? new Date(hotel.checkIn) : tripStart;
+        const stayEnd = hotel.checkOut ? new Date(hotel.checkOut) : tripEnd;
+        return {
+          hotelName: hotel.name,
+          employeeName: event.employeeName,
+          stayStart,
+          stayEnd,
+        };
+      })
+      .filter((hotel) => hotel.stayStart && hotel.stayEnd);
   }
 
   showAlert(message, type) {

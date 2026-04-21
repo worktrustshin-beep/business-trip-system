@@ -267,6 +267,11 @@ class BusinessTripManager {
       document.getElementById("startDate").value = (trip.start_date || "").split("T")[0];
       document.getElementById("endDate").value = (trip.end_date || "").split("T")[0];
       document.getElementById("hotel").value = trip.hotel || "";
+      document.getElementById("hotelCheckIn").value = trip.hotel_check_in ? String(trip.hotel_check_in).split("T")[0] : "";
+      document.getElementById("hotelCheckOut").value = trip.hotel_check_out ? String(trip.hotel_check_out).split("T")[0] : "";
+      document.getElementById("hotel2").value = trip.hotel_2 || "";
+      document.getElementById("hotel2CheckIn").value = trip.hotel_2_check_in ? String(trip.hotel_2_check_in).split("T")[0] : "";
+      document.getElementById("hotel2CheckOut").value = trip.hotel_2_check_out ? String(trip.hotel_2_check_out).split("T")[0] : "";
       document.getElementById("notes").value = trip.notes || "";
 
       const modalEl = document.getElementById("businessTripModal");
@@ -314,11 +319,12 @@ class BusinessTripManager {
           destination: document.getElementById('destination').value.trim(),
           start_date: document.getElementById('startDate').value,
           end_date: document.getElementById('endDate').value,
-          // DB側でNOT NULLのため、ひとまず出張期間＝宿泊期間として保存
-          hotel_check_in: document.getElementById('startDate').value,
-          hotel_check_out: document.getElementById('endDate').value,
           hotel: document.getElementById('hotel').value.trim(),
-          hotel_type: document.getElementById('hotel').value.trim(),
+          hotel_check_in: document.getElementById('hotelCheckIn').value || null,
+          hotel_check_out: document.getElementById('hotelCheckOut').value || null,
+          hotel_2: document.getElementById('hotel2').value.trim(),
+          hotel_2_check_in: document.getElementById('hotel2CheckIn').value || null,
+          hotel_2_check_out: document.getElementById('hotel2CheckOut').value || null,
           notes: document.getElementById('notes').value.trim()
       };
 }
@@ -344,6 +350,15 @@ class BusinessTripManager {
     if (new Date(data.start_date) > new Date(data.end_date)) {
       this.showAlert("終了日は開始日より後の日付を選択してください", "warning");
       return false;
+    }
+    if (!this.validateHotelStay(data, "hotel", "ホテル1")) return false;
+    if (!this.validateHotelStay(data, "hotel_2", "ホテル2")) return false;
+
+    if (data.hotel_check_in && data.hotel_2_check_in) {
+      if (new Date(data.hotel_check_out) > new Date(data.hotel_2_check_in)) {
+        this.showAlert("ホテル1とホテル2の滞在期間が重複しています", "warning");
+        return false;
+      }
     }
     return true;
   }
@@ -414,6 +429,38 @@ clearSearch() {
   resetForm() {
     document.getElementById("businessTripForm")?.reset();
     this.currentEditId = null;
+  }
+
+  validateHotelStay(data, prefix, label) {
+    const hotelName = data[prefix] || "";
+    const checkIn = data[`${prefix}_check_in`] || "";
+    const checkOut = data[`${prefix}_check_out`] || "";
+
+    if (!hotelName && !checkIn && !checkOut) return true;
+
+    if ((checkIn || checkOut) && !hotelName) {
+      this.showAlert(`${label}を入力してください`, "warning");
+      return false;
+    }
+
+    if (!checkIn && !checkOut) return true;
+
+    if (!checkIn || !checkOut) {
+      this.showAlert(`${label}の滞在開始日と終了日は両方入力してください`, "warning");
+      return false;
+    }
+
+    if (new Date(checkIn) > new Date(checkOut)) {
+      this.showAlert(`${label}の終了日は開始日以降にしてください`, "warning");
+      return false;
+    }
+
+    if (new Date(checkIn) < new Date(data.start_date) || new Date(checkOut) > new Date(data.end_date)) {
+      this.showAlert(`${label}の滞在期間は出張期間内で入力してください`, "warning");
+      return false;
+    }
+
+    return true;
   }
 
   showAlert(message, type) {
